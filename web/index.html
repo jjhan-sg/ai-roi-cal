@@ -64,10 +64,10 @@
 
       <div class="sidebar-footer">
         <div class="user-profile">
-          <div class="avatar" id="avatarIcon">PM</div>
+          <div class="avatar" id="avatarIcon">ALL</div>
           <div class="user-meta">
-            <div class="user-name" id="currentUserName">김인프라 팀장</div>
-            <div class="user-role" id="currentUserRoleBadge">Business Owner (IT)</div>
+            <div class="user-name" id="currentUserName">전사 조직 (All Units)</div>
+            <div class="user-role" id="currentUserRoleBadge">전체 역할 (All Roles)</div>
           </div>
         </div>
       </div>
@@ -79,13 +79,36 @@
       <header class="top-bar">
         <div class="top-bar-left">
           <span class="page-title" id="pageTitle">Home / 빠른 시작</span>
-          <select class="tenant-selector" id="roleSelector" title="역할 전환">
-            <option value="pmo">AX/AI PMO (전사 관리자)</option>
-            <option value="owner" selected>Business Owner (현업 팀장)</option>
-            <option value="finance">Finance Reviewer (재무 심의)</option>
-            <option value="risk">Risk/Security Officer (보안 감사)</option>
-            <option value="exec">Executive Viewer (경영진)</option>
-          </select>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <!-- Dual Selectors: Organization & Role -->
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">🏢 조직:</span>
+              <select class="tenant-selector" id="orgSelector" title="담당 조직 부문 선택 (유스케이스 자동 필터링)">
+                <option value="all">🌐 전사 조직 (전체 26건)</option>
+                <option value="it_data">💻 정보기술·데이터 (5건)</option>
+                <option value="sec_privacy">🛡️ 보안·개인정보 (3건)</option>
+                <option value="rnd">🔬 연구개발 R&D (2건)</option>
+                <option value="scm_prod">🏭 생산·공급망 SCM (3건)</option>
+                <option value="qa_ra">📋 품질·규제 QA/RA (3건)</option>
+                <option value="sales_mkt">📈 영업·마케팅·고객 (3건)</option>
+                <option value="fin_legal">⚖️ 재무·법무 (3건)</option>
+                <option value="hr_admin">👥 인사·총무·경영 (4건)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">👔 역할:</span>
+              <select class="tenant-selector" id="roleSelector" title="담당 직책/역할 선택 (유스케이스 자동 필터링)">
+                <option value="all">🌐 전체 역할 (All Roles)</option>
+                <option value="owner">👔 Business Owner (현업 조직장/부서장)</option>
+                <option value="lead">💻 Tech Lead (실무/엔지니어링 리드)</option>
+                <option value="pmo">🎯 AX/AI PMO (전사 기획 및 총괄 관리자)</option>
+                <option value="finance">📊 Finance Reviewer (재무 심의위원)</option>
+                <option value="risk">🛡️ Risk/Security Officer (보안·규제 감사관)</option>
+                <option value="exec">🏛️ Executive (경영진 / C-Level)</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div class="top-bar-right">
@@ -152,12 +175,15 @@
                 IT, 품질, 연구, 생산, 재무, 영업 등 기업 표준 기능 조직을 선택하고 
                 검증된 표준 워크플로우를 즉시 적용합니다.
               </p>
-              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <span class="badge badge-purple">IT/데이터 (5)</span>
-                <span class="badge badge-blue">보안/개인정보 (3)</span>
-                <span class="badge badge-green">연구개발 (2)</span>
-                <span class="badge badge-amber">품질/규제 (3)</span>
-                <span class="badge badge-blue">재무/법무 (3)</span>
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="homeOrgBadges">
+                <span class="badge badge-purple btn-home-org-filter" data-cat="it_data" style="cursor: pointer;" title="정보기술·데이터 5개 템플릿 보기">💻 IT/데이터 (5)</span>
+                <span class="badge badge-blue btn-home-org-filter" data-cat="sec_privacy" style="cursor: pointer;" title="보안·개인정보 3개 템플릿 보기">🛡️ 보안/개인정보 (3)</span>
+                <span class="badge badge-green btn-home-org-filter" data-cat="rnd" style="cursor: pointer;" title="연구개발 2개 템플릿 보기">🔬 연구개발 (2)</span>
+                <span class="badge badge-amber btn-home-org-filter" data-cat="scm_prod" style="cursor: pointer;" title="생산·공급망 3개 템플릿 보기">🏭 생산/공급망 (3)</span>
+                <span class="badge badge-blue btn-home-org-filter" data-cat="qa_ra" style="cursor: pointer;" title="품질·규제 3개 템플릿 보기">📋 품질/규제 (3)</span>
+                <span class="badge badge-purple btn-home-org-filter" data-cat="sales_mkt" style="cursor: pointer;" title="영업·마케팅 3개 템플릿 보기">📈 영업/마케팅 (3)</span>
+                <span class="badge badge-blue btn-home-org-filter" data-cat="fin_legal" style="cursor: pointer;" title="재무·법무 3개 템플릿 보기">⚖️ 재무/법무 (3)</span>
+                <span class="badge badge-green btn-home-org-filter" data-cat="hr_admin" style="cursor: pointer;" title="인사·총무·경영 4개 템플릿 보기">👥 인사/경영 (4)</span>
               </div>
             </div>
 
@@ -184,53 +210,60 @@
           <!-- Quick Executive KPI Stats -->
           <div class="grid-4" style="margin-bottom: 1.5rem;">
             <div class="stat-card">
-              <div class="stat-label">전사 등록 AX 과제</div>
+              <div class="stat-label">등록 AX 과제</div>
               <div class="stat-value" id="kpiTotalCases">10 건</div>
-              <div class="stat-sub">운영 2건 / Pilot 2건 / PoC 2건</div>
+              <div class="stat-sub" id="kpiTotalCasesSub">운영 2건 / Pilot 2건 / PoC 2건</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">3개년 누적 예상 순편익</div>
               <div class="stat-value" id="kpiTotalNetBenefit">₩1,420M</div>
-              <div class="stat-sub">전사 총 TCO: ₩687M</div>
+              <div class="stat-sub" id="kpiTotalNetBenefitSub">전사 총 TCO: ₩687M</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">포트폴리오 평균 3년 ROI</div>
               <div class="stat-value" id="kpiAvgRoi">182.4%</div>
-              <div class="stat-sub">평균 회수기간: 7.2개월</div>
+              <div class="stat-sub" id="kpiAvgRoiSub">평균 회수기간: 7.2개월</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">게이트 심의 대기</div>
               <div class="stat-value" id="kpiPendingGates">3 건</div>
-              <div class="stat-sub" style="color: #f59e0b;">G1 선별 2건, G2 사업성 1건</div>
+              <div class="stat-sub" id="kpiPendingGatesSub" style="color: #f59e0b;">G1 선별 2건, G2 사업성 1건</div>
             </div>
           </div>
 
           <!-- Flagship Case Spotlight -->
-          <div class="card">
+          <div class="card" id="homeSpotlightCard">
             <div class="card-header">
-              <div class="card-title">
-                <span>⭐</span> 대표 추진 과제 심층 현황: [UC-2026-001] 주간 장애 및 운영 보고 자동화
+              <div class="card-title" id="homeSpotlightTitle">
+                <span>⭐</span> <span id="homeSpotlightTitleText">대표 추진 과제 심층 현황: [UC-2026-001] 주간 장애 및 운영 보고 자동화</span>
               </div>
-              <button class="btn btn-secondary btn-sm" id="btnGoFlagshipRoi">
-                상세 ROI 시뮬레이터 열기 →
-              </button>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <span class="badge badge-purple" id="homeSpotlightScopeBadge">담당: IT 운영팀장 (Business Owner)</span>
+                <button class="btn btn-secondary btn-sm" id="btnGoFlagshipRoi">
+                  상세 ROI 시뮬레이터 열기 →
+                </button>
+              </div>
             </div>
-            <div class="grid-3">
+            <div class="grid-3" id="homeSpotlightDetails">
               <div>
                 <div style="font-size: 0.75rem; color: var(--text-muted);">단계 / 게이트</div>
-                <div style="font-weight: 700; color: #60a5fa;">Pilot (G4 PoC 종료 승인 완료)</div>
-                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">주관: 정보기술·데이터 (김인프라 팀장)</div>
+                <div style="font-weight: 700; color: #60a5fa;" id="homeSpotlightStage">Pilot (G4 PoC 종료 승인 완료)</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;" id="homeSpotlightOrg">주관: 정보기술·데이터 (IT 운영팀장)</div>
               </div>
               <div>
                 <div style="font-size: 0.75rem; color: var(--text-muted);">연간 순편익 / 회수기간</div>
-                <div style="font-weight: 700; color: #34d399;">₩67,632 천원 / 4.2개월</div>
-                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">1년 TCO: ₩27.9M | 3년 ROI: 282.0%</div>
+                <div style="font-weight: 700; color: #34d399;" id="homeSpotlightBenefit">₩67,632 천원 / 4.2개월</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;" id="homeSpotlightTco">1년 TCO: ₩27.9M | 3년 ROI: 282.0%</div>
               </div>
               <div>
                 <div style="font-size: 0.75rem; color: var(--text-muted);">AI 패턴 & 통제</div>
-                <div style="font-weight: 700; color: #fbbf24;">요약·작성 + 분석·탐지 (HITL 필수)</div>
-                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">신뢰도: B등급 (검증됨) | 위험: Tier 2</div>
+                <div style="font-weight: 700; color: #fbbf24;" id="homeSpotlightPattern">요약·작성 + 분석·탐지 (HITL 필수)</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;" id="homeSpotlightRisk">신뢰도: B등급 (검증됨) | 위험: Tier 2</div>
               </div>
+            </div>
+            <!-- Dynamic User Cases List on Home -->
+            <div id="homeUserCaseList" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08);">
+              <!-- Rendered by JS -->
             </div>
           </div>
         </section>
@@ -283,7 +316,11 @@
                   AS-IS 소요시간과 AI TO-BE 단계(잔류인간, 검토, 예외, 재작업)를 분해하여 정밀 절감효과를 계산합니다.
                 </p>
               </div>
-              <div style="display: flex; gap: 0.5rem;">
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">과제 선택:</span>
+                  <select class="form-select" id="wfCaseSelector" style="min-width: 240px; font-size: 0.8rem; padding: 4px 8px;" title="워크플로우 분석 대상 과제"></select>
+                </div>
                 <button class="btn btn-secondary btn-sm" id="btnAddWfStep">+ 단계 추가</button>
                 <button class="btn btn-outline btn-sm" id="btnSaveWfIdea">💾 포트폴리오 후보 저장</button>
                 <button class="btn btn-primary btn-sm" id="btnForwardRoi">💰 ROI 시뮬레이터 전달 →</button>
@@ -358,13 +395,53 @@
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
               <div>
                 <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">AX 과제 포트폴리오 관리대장</h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted);">전사 10대 핵심 AX 과제의 단계(Stage), 게이트(G0~G6), 재무 성과 및 우선순위 관리</p>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">전사 26대 핵심 AX 과제의 단계(Stage), 게이트(G0~G6), 재무 성과 및 우선순위 관리</p>
               </div>
               <div style="display: flex; gap: 0.5rem;">
                 <button class="btn btn-secondary btn-sm" id="btnViewList" style="background: #2563eb; color: #fff;">📋 목록 뷰</button>
                 <button class="btn btn-secondary btn-sm" id="btnViewKanban">📌 Kanban 보드</button>
                 <button class="btn btn-primary btn-sm" id="btnNewCaseModal">+ 새 과제 등록</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Portfolio Filter Bar -->
+          <div class="portfolio-filter-bar">
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 0.3rem;">
+                <span style="font-size: 0.8rem; color: #e2e8f0; font-weight: 700;">🏢 조직:</span>
+                <select class="form-select" id="portfolioOrgFilter" style="min-width: 170px; font-size: 0.8rem; padding: 4px 10px;">
+                  <option value="all">🌐 전사 조직 (전체 26건)</option>
+                  <option value="it_data">💻 정보기술·데이터 (5건)</option>
+                  <option value="sec_privacy">🛡️ 보안·개인정보 (3건)</option>
+                  <option value="rnd">🔬 연구개발 R&D (2건)</option>
+                  <option value="scm_prod">🏭 생산·공급망 SCM (3건)</option>
+                  <option value="qa_ra">📋 품질·규제 QA/RA (3건)</option>
+                  <option value="sales_mkt">📈 영업·마케팅·고객 (3건)</option>
+                  <option value="fin_legal">⚖️ 재무·법무 (3건)</option>
+                  <option value="hr_admin">👥 인사·총무·경영 (4건)</option>
+                </select>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 0.3rem;">
+                <span style="font-size: 0.8rem; color: #e2e8f0; font-weight: 700;">👔 역할:</span>
+                <select class="form-select" id="portfolioRoleFilter" style="min-width: 170px; font-size: 0.8rem; padding: 4px 10px;">
+                  <option value="all">🌐 전체 역할 (All Roles)</option>
+                  <option value="owner">👔 Business Owner</option>
+                  <option value="lead">💻 Tech Lead</option>
+                  <option value="pmo">🎯 AX/AI PMO</option>
+                  <option value="finance">📊 Finance Reviewer</option>
+                  <option value="risk">🛡️ Risk/Security Officer</option>
+                  <option value="exec">🏛️ Executive</option>
+                </select>
+              </div>
+
+              <button class="btn btn-outline btn-sm" id="btnResetPortfolioFilter" style="display: none; padding: 3px 8px; font-size: 0.75rem;">
+                🔄 필터 초기화
+              </button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="badge badge-blue" id="portfolioFilterBadge">표시 중: 26건 / 전체 26건</span>
             </div>
           </div>
 
@@ -377,7 +454,7 @@
                     <th>과제 ID</th>
                     <th>과제명</th>
                     <th>조직</th>
-                    <th>소유자</th>
+                    <th>담당 역할 (Role)</th>
                     <th>단계</th>
                     <th>게이트</th>
                     <th>위험 등급</th>
@@ -420,11 +497,17 @@
                   8대 TCO 비용군과 5대 다차원 편익군을 기반으로 한 36개월 월별 현금흐름 및 할인 NPV/ROI 모델
                 </p>
               </div>
-              <div style="display: flex; gap: 0.5rem;">
-                <select class="form-select" id="roiScenarioSelector" style="width: 170px;">
-                  <option value="baseline" selected>기준 시나리오 (Baseline)</option>
-                  <option value="conservative">보수적 시나리오 (Conservative)</option>
-                  <option value="aggressive">공격적 시나리오 (Aggressive)</option>
+              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">대상 과제:</span>
+                  <select class="form-select" id="roiCaseSelector" style="min-width: 260px; font-size: 0.8rem; padding: 4px 8px;" title="시뮬레이션 대상 과제 선택"></select>
+                </div>
+                <select class="form-select" id="roiScenarioSelector" style="width: 210px;" title="투자 및 리스크 분석 시나리오 선택">
+                  <option value="baseline" selected>🎯 기본 시나리오 (Baseline)</option>
+                  <option value="conservative">🛡️ 보수적 시나리오 (Conservative)</option>
+                  <option value="aggressive">🚀 공격적 시나리오 (Aggressive)</option>
+                  <option value="regulatory">⚖️ 규제·보안 강화 (Regulatory Strict)</option>
+                  <option value="early_harvest">⚡ 조기 가치회수 (Quick-Win Focus)</option>
                 </select>
                 <button class="btn btn-outline btn-sm" id="btnExportMemo">📄 심의서 내보내기</button>
               </div>
@@ -685,8 +768,11 @@
           <div class="card" style="margin-bottom: 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
               <div>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">경영진 보고서 & 투자 심의 메모 (Executive Briefing)</h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted);">전사 AX 포트폴리오 투자 현황 및 투자 심의 위원회 제출용 표준 보고서</p>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">경영진 보고서 & 투자 심의 메모 (Executive Briefing)</h3>
+                  <span class="badge badge-blue" id="reportScopeBadge">보고 범위: 전체 과제</span>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">선택된 사용자 및 전사 AX 포트폴리오 투자 현황 및 투자 심의 위원회 제출용 표준 보고서</p>
               </div>
               <div style="display: flex; gap: 0.5rem;">
                 <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 보고서 인쇄 / PDF 저장</button>

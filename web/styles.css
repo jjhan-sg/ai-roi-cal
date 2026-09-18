@@ -253,11 +253,41 @@ body {
   background: #1e293b;
   border: 1px solid var(--border-color);
   color: #e2e8f0;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   outline: none;
   cursor: pointer;
+  max-width: 380px;
+}
+
+.tenant-selector optgroup {
+  background: #0f172a;
+  color: #93c5fd;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 4px 0;
+}
+
+.tenant-selector option {
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 6px 8px;
+  font-weight: 400;
+}
+
+.portfolio-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
 }
 
 .top-bar-right {
