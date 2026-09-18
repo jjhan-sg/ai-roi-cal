@@ -1,0 +1,808 @@
+/**
+ * AX PORTFOLIO MANAGER + AI ROI SIMULATOR
+ * Master Dataset (PRD v3.0 & Appendix A)
+ */
+
+window.AX_DATA = {
+  // 8 Corporate Functional Categories (PRD 제5장)
+  categories: [
+    { id: "it_data", name: "정보기술·데이터", icon: "server", desc: "IT 운영, 서비스데스크, 장애, 접근권한, 데이터품질, AI CoE", count: 5 },
+    { id: "sec_privacy", name: "보안·개인정보", icon: "shield", desc: "보안관제(SIEM), 취약점 관리, 개인정보 처리활동, 감사대응", count: 3 },
+    { id: "rnd", name: "연구개발 (R&D)", icon: "flask-conical", desc: "문헌·특허 선행조사, 실험기록 분석, 기술기획, 개발문서", count: 2 },
+    { id: "scm_prod", name: "생산·공급망 (SCM)", icon: "factory", desc: "작업일보 분석, 설비이상탐지, 수요·재고 최적화, 견적비교", count: 3 },
+    { id: "qa_ra", name: "품질·규제 (QA/RA)", icon: "clipboard-check", desc: "규제문서 검토, 이탈/CAPA 초안, GxP 감사 증적 수집", count: 3 },
+    { id: "sales_mkt", name: "영업·마케팅·고객", icon: "users", desc: "고객 제안서, VOC 분석, 다채널 문의 응대, 캠페인", count: 3 },
+    { id: "fin_legal", name: "재무·법무", icon: "scale", desc: "월마감 분석, 비용정산 검토, 계약서 위험 조항 검토", count: 3 },
+    { id: "hr_admin", name: "인사·총무·경영", icon: "briefcase", desc: "온보딩 안내, 교육자료 제작, 임원 보고자료, 회의 추적", count: 4 }
+  ],
+
+  // 26 Standard Tasks (PRD Appendix A)
+  templates: [
+    {
+      id: "TMPL-01",
+      catId: "it_data",
+      catName: "정보기술·데이터",
+      title: "서비스데스크 문의 처리",
+      desc: "반복적인 사내 IT 헬프데스크 티켓에 대한 지식검색 및 초안 자동 생성",
+      workflow: "접수 → 분류 → 지식검색 → 답변/티켓 → 에스컬레이션 → 종료",
+      pattern: "검색/RAG, 분류·추출",
+      control: "출처 표시, 개인정보 마스킹, 티켓 권한 상속",
+      autoRate: 0.65,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 450,
+      baseMin: 25,
+      steps: [
+        { no: 1, name: "문의 티켓 접수 및 카테고리 자동 분류", role: "AI Agent", system: "ITSM", pattern: "분류·추출", min: 3, auto: 0.9, hitl: false },
+        { no: 2, name: "사내 IT 지식 베이스(KB) 및 위키 검색", role: "AI Engine", system: "Confluence/KB", pattern: "검색/RAG", min: 8, auto: 0.85, hitl: false },
+        { no: 3, name: "해결 가이드 및 맞춤형 답변 초안 작성", role: "LLM", system: "ITSM Agent", pattern: "요약·작성", min: 7, auto: 0.75, hitl: false },
+        { no: 4, name: "서비스데스크 담당자 검토 및 승인 (HITL)", role: "헬프데스크 담당", system: "ITSM", pattern: "Human Review", min: 4, auto: 0.2, hitl: true },
+        { no: 5, name: "사용자 회신 및 티켓 처리 상태 갱신", role: "시스템", system: "ITSM/메일", pattern: "Agent/Workflow", min: 3, auto: 0.8, hitl: false }
+      ]
+    },
+    {
+      id: "TMPL-02",
+      catId: "it_data",
+      catName: "정보기술·데이터",
+      title: "주간 장애 및 운영 보고",
+      desc: "이종 모니터링 시스템 로그와 장애 티켓을 취합하여 경영진 보고서 초안 생성",
+      workflow: "로그/티켓 수집 → 영향분석 → 원인/조치 정리 → 초안생성 → 검토 → 배포",
+      pattern: "요약·작성, 분석·탐지",
+      control: "사람 검토 후 배포, 기밀시스템 마스킹",
+      autoRate: 0.70,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 4,
+      baseMin: 470,
+      steps: [
+        { no: 1, name: "다중 소스 로그 및 티켓 데이터 수집", role: "IT 운영자", system: "ITSM, Zabbix, CloudWatch", pattern: "분류·추출 / Agent", min: 90, auto: 0.85, hitl: false },
+        { no: 2, name: "장애 영향도 및 서비스 중단 분석", role: "서비스 엔지니어", system: "ITSM, 서비스 카탈로그", pattern: "분석·탐지", min: 75, auto: 0.75, hitl: false },
+        { no: 3, name: "근본 원인 및 조치 내역 정리", role: "시스템 아키텍트", system: "Wiki, Jira", pattern: "검색/RAG, 요약", min: 120, auto: 0.70, hitl: false },
+        { no: 4, name: "경영진 보고서 초안 생성", role: "운영 기획자", system: "M365, 사내 템플릿", pattern: "요약·작성 (LLM)", min: 80, auto: 0.80, hitl: false },
+        { no: 5, name: "전문가/팀장 검토 및 수정 (HITL)", role: "IT 운영팀장", system: "사내 결재 포털", pattern: "Human-in-the-Loop", min: 60, auto: 0.20, hitl: true },
+        { no: 6, name: "경영진 최종 보고 및 유관부서 배포", role: "운영 기획자", system: "Outlook/Teams", pattern: "Agent/Workflow", min: 45, auto: 0.70, hitl: false }
+      ]
+    },
+    {
+      id: "TMPL-03",
+      catId: "it_data",
+      catName: "정보기술·데이터",
+      title: "접근권한 정기 검토",
+      desc: "임직원 시스템 계정 및 과다 권한 이상치를 AI로 탐지하고 부서장 승인 지원",
+      workflow: "대상추출 → 부서확인 → 이상탐지 → 승인 → 회수 → 증적",
+      pattern: "분석·탐지, Agent/Workflow",
+      control: "최종 승인권자 결재 필수, 감사 증적 보존",
+      autoRate: 0.50,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 12,
+      baseMin: 320,
+      steps: [
+        { no: 1, name: "시스템별 사용자 접근 권한 원장 추출", role: "보안 관리자", system: "Active Directory, SAP", pattern: "분류·추출", min: 60, auto: 0.85, hitl: false },
+        { no: 2, name: "휴직자/퇴사자/직무변경자 권한 이상치 분석", role: "AI 엔진", system: "IAM/HR", pattern: "분석·탐지", min: 80, auto: 0.75, hitl: false },
+        { no: 3, name: "부서장 소명 요청 및 검토 패키지 생성", role: "Agent", system: "사내 포털", pattern: "Agent/Workflow", min: 50, auto: 0.70, hitl: false },
+        { no: 4, name: "조직장 및 정보보호책임자 권한 승인 (HITL)", role: "부서장/CISO", system: "전자결재", pattern: "Human Review", min: 70, auto: 0.10, hitl: true },
+        { no: 5, name: "미승인 권한 자동 회수 및 감사 증적 아카이빙", role: "시스템", system: "IAM, 감사 로그", pattern: "Agent/Workflow", min: 60, auto: 0.90, hitl: false }
+      ]
+    },
+    {
+      id: "TMPL-04",
+      catId: "it_data",
+      catName: "정보기술·데이터",
+      title: "데이터 정합성 점검",
+      desc: "DW/데이터레이크 파이프라인의 Null, 이상치, 외래키 부정합 자동 검증",
+      workflow: "추출 → 규칙검증 → 오류분류 → 수정요청 → 재검증 → 보고",
+      pattern: "분류·추출, 분석·탐지",
+      control: "규칙 위반 이력 보존, 원본 DB 쓰기 통제",
+      autoRate: 0.75,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 30,
+      baseMin: 180,
+      steps: [
+        { no: 1, name: "데이터베이스 테이블 프로파일링 및 메타데이터 추출", role: "데이터 엔지니어", system: "Snowflake/DB", pattern: "분류·추출", min: 40, auto: 0.90, hitl: false },
+        { no: 2, name: "비즈니스 룰 및 이상치 탐지 알고리즘 실행", role: "AI 모델", system: "데이터 품질 플랫폼", pattern: "분석·탐지", min: 60, auto: 0.85, hitl: false },
+        { no: 3, name: "오류 항목 분류 및 원인 분석 초안 생성", role: "LLM", system: "Jira/품질 대시보드", pattern: "요약·작성", min: 40, auto: 0.75, hitl: false },
+        { no: 4, name: "데이터 오너 확인 및 수정 쿼리 승인 (HITL)", role: "도메인 데이터 관리자", system: "품질 포털", pattern: "Human Review", min: 40, auto: 0.20, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-05",
+      catId: "it_data",
+      catName: "정보기술·데이터",
+      title: "AI 사용·비용 분석 (FinOps)",
+      desc: "전사 LLM API 호출량 및 클라우드 비용을 조직별 배부하고 이상비용 권고",
+      workflow: "사용량수집 → 비용배부 → 활용분석 → 이상탐지 → 권고 → 보고",
+      pattern: "분석·탐지, 추천·의사결정",
+      control: "비용 이상 탐지 알림, 과금 데이터 감사",
+      autoRate: 0.80,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 4,
+      baseMin: 240,
+      steps: [
+        { no: 1, name: "Azure/AWS/OpenAI 토큰 및 비용 로그 수집", role: "클라우드 관리자", system: "AI Gateway / Cloud Billing", pattern: "분류·추출", min: 50, auto: 0.95, hitl: false },
+        { no: 2, name: "부서/과제별 공통비 배부 룰 적용 계산", role: "시스템", system: "ERP / FinOps 대시보드", pattern: "Agent/Workflow", min: 60, auto: 0.90, hitl: false },
+        { no: 3, name: "비정상 급증(Spike) 호출 탐지 및 원인 분석", role: "AI 엔진", system: "AI Observability", pattern: "분석·탐지", min: 50, auto: 0.80, hitl: false },
+        { no: 4, name: "FinOps 최적화 권고안 및 보고서 생성", role: "FinOps 리드", system: "Power BI/M365", pattern: "추천·의사결정", min: 80, auto: 0.65, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-06",
+      catId: "sec_privacy",
+      catName: "보안·개인정보",
+      title: "보안 경보 분석 (SIEM/SOAR)",
+      desc: "보안관제(SIEM) 알람의 콘텍스트를 수집하여 오탐을 필터링하고 대응 가이드 제안",
+      workflow: "경보수집 → 맥락보강 → 유사사례 → 위험판단 → 조치권고 → 검토",
+      pattern: "분석·탐지, 검색/RAG",
+      control: "설명 가능성, 오탐 검토, 침해대응 책임자 확인",
+      autoRate: 0.60,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 200,
+      baseMin: 45,
+      steps: [
+        { no: 1, name: "SIEM 보안 이벤트 경보 수집 및 상관관계 분석", role: "SOC 1선", system: "Splunk / Sentinel", pattern: "분류·추출", min: 10, auto: 0.80, hitl: false },
+        { no: 2, name: "위협 인텔리전스(CTI) 및 사내 자산 정보 조회", role: "AI Agent", system: "Threat Intel, CMDB", pattern: "검색/RAG", min: 12, auto: 0.85, hitl: false },
+        { no: 3, name: "침해 위험도 점수화 및 오탐 여부 판정", role: "AI 엔진", system: "SOAR", pattern: "분석·탐지", min: 8, auto: 0.70, hitl: false },
+        { no: 4, name: "보안 침해 대응 보고서 및 격리 조치 권고안", role: "LLM", system: "SOAR/티켓", pattern: "추천·의사결정", min: 8, auto: 0.60, hitl: false },
+        { no: 5, name: "보안관제팀장/CISO 최종 차단 승인 (HITL)", role: "CISO / SOC 리드", system: "보안 콘솔", pattern: "Human Review", min: 7, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-07",
+      catId: "sec_privacy",
+      catName: "보안·개인정보",
+      title: "취약점 조치 관리",
+      desc: "인프라/앱 취약점 스캔 결과를 중복 제거하고 자산 중요도 기반 우선순위 매핑",
+      workflow: "스캔수집 → 중복제거 → 자산/위협 결합 → 우선순위 → 배정 → 검증",
+      pattern: "분류·추출, 추천·의사결정",
+      control: "패치 전 테스트 검증, 영향도 평가",
+      autoRate: 0.55,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 20,
+      baseMin: 180,
+      steps: [
+        { no: 1, name: "취약점 스캐너 리포트 수집 및 파싱", role: "보안 담당", system: "Nessus, Qualys", pattern: "분류·추출", min: 40, auto: 0.90, hitl: false },
+        { no: 2, name: "자산 중요도 및 인터넷 노출도 기반 위험도 재산정", role: "AI 엔진", system: "CMDB / 취약점 DB", pattern: "분석·탐지", min: 50, auto: 0.75, hitl: false },
+        { no: 3, name: "조치 패치 가이드 및 담당 시스템 부서 자동 배정", role: "Agent", system: "Jira / ITSM", pattern: "추천·의사결정", min: 40, auto: 0.60, hitl: false },
+        { no: 4, name: "시스템 관리자 패치 적용 및 보안팀 재검증 (HITL)", role: "인프라팀 / 보안팀", system: "서버 콘솔", pattern: "Human Review", min: 50, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-08",
+      catId: "sec_privacy",
+      catName: "보안·개인정보",
+      title: "개인정보 처리활동 정리 (RoPA)",
+      desc: "부서별 시스템 및 데이터 흐름도를 분석하여 개인정보 처리방침과 RoPA 자동 갱신",
+      workflow: "인터뷰/문서수집 → 활동분류 → 데이터흐름 → 보유/제공 → 검토 → 등록",
+      pattern: "요약·작성, 분류·추출",
+      control: "CPO/개인정보보호책임자 최종 승인",
+      autoRate: 0.50,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 4,
+      baseMin: 360,
+      steps: [
+        { no: 1, name: "각 업무 시스템 개인정보 테이블/필드 메타 수집", role: "CPO 담당자", system: "DB 카탈로그 / 개인정보 솔루션", pattern: "분류·추출", min: 90, auto: 0.80, hitl: false },
+        { no: 2, name: "수집목적, 보유기간, 제3자 제공 내역 법률 매핑", role: "AI 법률 보조", system: "개인정보보호법 지식베이스", pattern: "검색/RAG", min: 100, auto: 0.65, hitl: false },
+        { no: 3, name: "개인정보 처리활동 기록부(RoPA) 대장 초안 작성", role: "LLM", system: "M365 / 규제 포털", pattern: "요약·작성", min: 80, auto: 0.70, hitl: false },
+        { no: 4, name: "개인정보보호책임자(CPO) 최종 법률 검토 및 승인", role: "CPO", system: "전자결재", pattern: "Human Review", min: 90, auto: 0.05, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-09",
+      catId: "rnd",
+      catName: "연구개발 (R&D)",
+      title: "문헌·특허 선행 기술 조사",
+      desc: "연구 테마 관련 글로벌 논문(PubMed, IEEE)과 특허 데이터를 검색하고 갭 분석",
+      workflow: "질문정의 → 검색 → 선별 → 추출 → 비교 → 요약 → 전문가검증",
+      pattern: "검색/RAG, 요약·작성",
+      control: "원문 출처 표기, 특허 침해 판단은 변리사 검토",
+      autoRate: 0.65,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 8,
+      baseMin: 420,
+      steps: [
+        { no: 1, name: "연구 핵심 키워드 및 특허 분류코드(IPC) 정의", role: "연구원", system: "WIPS / Scopus", pattern: "검색/RAG", min: 60, auto: 0.60, hitl: false },
+        { no: 2, name: "선행 문헌/특허 전문 수집 및 청구항 비교 분석", role: "AI 엔진", system: "특허 빅데이터", pattern: "분류·추출", min: 140, auto: 0.80, hitl: false },
+        { no: 3, name: "기술 차별성 및 특허 장벽 분석 보고서 초안", role: "LLM", system: "연구노트 / M365", pattern: "요약·작성", min: 120, auto: 0.70, hitl: false },
+        { no: 4, name: "연구책임자(PI) 및 사내 변리사 검토 및 승인 (HITL)", role: "수석연구원 / 변리사", system: "지식재산 포털", pattern: "Human Review", min: 100, auto: 0.15, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-10",
+      catId: "rnd",
+      catName: "연구개발 (R&D)",
+      title: "실험 기록 요약 및 통계 분석",
+      desc: "연구자 전자연구노트의 실험 데이터 정규화 및 실험 결과 해석 초안 생성",
+      workflow: "기록수집 → 정규화 → 이상/누락 → 결과요약 → 해석초안 → 검토",
+      pattern: "요약·작성, 분석·탐지",
+      control: "실험 원본 변경 금지, 연구자 전자서명",
+      autoRate: 0.60,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 24,
+      baseMin: 180,
+      steps: [
+        { no: 1, name: "전자연구노트(ELN) 실험 원천 데이터 파싱", role: "연구원", system: "ELN 시스템", pattern: "분류·추출", min: 40, auto: 0.85, hitl: false },
+        { no: 2, name: "통계 검정 및 이상치(Outlier) 통계 탐지", role: "AI 모델", system: "Python/R 분석엔진", pattern: "분석·탐지", min: 50, auto: 0.80, hitl: false },
+        { no: 3, name: "실험 결론 및 다음 가설 제안 요약서 초안", role: "LLM", system: "ELN / Word", pattern: "요약·작성", min: 50, auto: 0.65, hitl: false },
+        { no: 4, name: "실험 수행 연구원 확인 및 전자서명 (HITL)", role: "실험책임자", system: "ELN", pattern: "Human Review", min: 40, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-11",
+      catId: "scm_prod",
+      catName: "생산·공급망 (SCM)",
+      title: "작업일보 분석 및 설비 이상탐지",
+      desc: "제조 현장 일일 작업일지와 IoT 센서 데이터를 결합하여 설비 고장 사전 예측",
+      workflow: "실적수집 → KPI 산출 → 이상치 탐지 → 원인후보 → 조치 → 보고",
+      pattern: "분석·탐지, 예측·최적화",
+      control: "현장 안전 엔지니어 승인, 오탐율 모니터링",
+      autoRate: 0.70,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 22,
+      baseMin: 150,
+      steps: [
+        { no: 1, name: "MES 생산 실적 및 PLC/센서 시계열 데이터 수집", role: "생산 관리자", system: "MES / SCADA", pattern: "분류·추출", min: 35, auto: 0.90, hitl: false },
+        { no: 2, name: "진동/온도 센서 이상 패턴 탐지 및 공정 불량 예측", role: "AI 모델", system: "스마트팩토리 플랫폼", pattern: "예측·최적화", min: 45, auto: 0.85, hitl: false },
+        { no: 3, name: "정비 가이드 및 설비 예방점검 권고 티켓 발행", role: "Agent", system: "CMMS / 설비보전", pattern: "추천·의사결정", min: 35, auto: 0.70, hitl: false },
+        { no: 4, name: "공장장 / 설비보전 엔지니어 점검 승인 (HITL)", role: "보전반장", system: "현장 태블릿", pattern: "Human Review", min: 35, auto: 0.20, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-12",
+      catId: "scm_prod",
+      catName: "생산·공급망 (SCM)",
+      title: "수요·재고 최적화 분석",
+      desc: "계절성, 프로모션, 원자재 리드타임을 반영하여 안전재고 및 발주량 추천",
+      workflow: "수요수집 → 데이터정제 → 예측 → 재고정책 → 시나리오 → 승인",
+      pattern: "예측·최적화, 추천·의사결정",
+      control: "최소 안전재고 보장, 공급망 책임자 승인",
+      autoRate: 0.65,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 8,
+      baseMin: 300,
+      steps: [
+        { no: 1, name: "과거 출하 실적 및 외부 시장 수요 데이터 정제", role: "SCM 담당자", system: "ERP / WMS", pattern: "분류·추출", min: 60, auto: 0.85, hitl: false },
+        { no: 2, name: "제품군별 중단기 수요 예측 모델 시뮬레이션", role: "AI 모델", system: "SCM 수요예측엔진", pattern: "예측·최적화", min: 90, auto: 0.80, hitl: false },
+        { no: 3, name: "창고별 안전재고 및 추천 발주량 시나리오 산출", role: "AI 알고리즘", system: "ERP 발주 모듈", pattern: "추천·의사결정", min: 80, auto: 0.70, hitl: false },
+        { no: 4, name: "SCM 팀장 및 구매 총괄 승인 (HITL)", role: "SCM 팀장", system: "전자결재", pattern: "Human Review", min: 70, auto: 0.15, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-13",
+      catId: "scm_prod",
+      catName: "생산·공급망 (SCM)",
+      title: "공급사 견적 비교 및 단가 분석",
+      desc: "복수 벤더의 PDF 견적서에서 품목명, 스펙, 단가를 자동 추출하여 동등 비교표 생성",
+      workflow: "요건정리 → 견적추출 → 동등조건화 → 비교 → 리스크 → 승인",
+      pattern: "분류·추출, 분석·탐지",
+      control: "구매 단가 보안, 공급사 평가 공정성 유지",
+      autoRate: 0.70,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 15,
+      baseMin: 200,
+      steps: [
+        { no: 1, name: "공급업체 제출 견적서(PDF/Excel) OCR 파싱", role: "구매 담당자", system: "구매 포털", pattern: "분류·추출", min: 45, auto: 0.90, hitl: false },
+        { no: 2, name: "품목 규격 동등성 매핑 및 과거 계약 단가 대조", role: "AI 모델", system: "ERP 구매마스터", pattern: "검색/RAG", min: 55, auto: 0.80, hitl: false },
+        { no: 3, name: "납기·가격·품질 종합 가중치 비교표 작성", role: "LLM", system: "M365 / 구매시스템", pattern: "요약·작성", min: 55, auto: 0.75, hitl: false },
+        { no: 4, name: "구매 실무자 및 팀장 협상 전략 승인 (HITL)", role: "구매팀장", system: "전자결재", pattern: "Human Review", min: 45, auto: 0.20, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-14",
+      catId: "qa_ra",
+      catName: "품질·규제 (QA/RA)",
+      title: "규제·품질 문서 정합성 점검",
+      desc: "신약/의료기기 인허가 제출 서류의 규제 가이드라인 부합성 및 누락 검토",
+      workflow: "문서수신 → 요건매핑 → 누락/불일치 → 의견초안 → 전문가검토 → 승인",
+      pattern: "요약·작성, 검색/RAG",
+      control: "GxP 규정 준수, 품질책임자 최종 서명 필수",
+      autoRate: 0.55,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 10,
+      baseMin: 480,
+      steps: [
+        { no: 1, name: "제출용 기술문서 및 규제 가이드라인(FDA/EMA) 수집", role: "RA 담당자", system: "EDMS / 규제 DB", pattern: "검색/RAG", min: 80, auto: 0.80, hitl: false },
+        { no: 2, name: "체크리스트 기반 필수 조항 누락 및 용어 불일치 검증", role: "AI 엔진", system: "규제 문서 검토 AI", pattern: "분석·탐지", min: 160, auto: 0.75, hitl: false },
+        { no: 3, name: "규제 보완 필요 항목 및 수정 의견서 초안 작성", role: "LLM", system: "Word / EDMS", pattern: "요약·작성", min: 120, auto: 0.60, hitl: false },
+        { no: 4, name: "QA/RA 실장 및 품질책임자 최종 서명 (HITL)", role: "품질책임자", system: "전자서명(21 CFR Part 11)", pattern: "Human Review", min: 120, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-15",
+      catId: "qa_ra",
+      catName: "품질·규제 (QA/RA)",
+      title: "이탈(Deviation) / CAPA 보고서 초안",
+      desc: "제조 공정 이탈 발생 시 과거 유사 CAPA 조치를 검색하여 근본원인과 시정조치 제안",
+      workflow: "사실수집 → 분류 → 원인분석 → 조치후보 → 효과확인계획 → 승인",
+      pattern: "요약·작성, 추천·의사결정",
+      control: "원인 분석 타당성 QA 검증, 시정조치 추적",
+      autoRate: 0.50,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 6,
+      baseMin: 540,
+      steps: [
+        { no: 1, name: "공정 이탈 보고서 및 생산 배치 기록 수집", role: "QC 담당자", system: "LIMS / MES", pattern: "분류·추출", min: 100, auto: 0.80, hitl: false },
+        { no: 2, name: "과거 유사 이탈 이력 및 CAPA 해결책 벡터 검색", role: "AI Agent", system: "QMS 벡터DB", pattern: "검색/RAG", min: 140, auto: 0.75, hitl: false },
+        { no: 3, name: "근본 원인(Fishbone/5-Why) 및 시정조치 계획서 초안", role: "LLM", system: "QMS", pattern: "요약·작성", min: 160, auto: 0.60, hitl: false },
+        { no: 4, name: "QA 위원회 검토 및 품질임원 최종 승인 (HITL)", role: "품질위원회", system: "QMS 결재선", pattern: "Human Review", min: 140, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-16",
+      catId: "qa_ra",
+      catName: "품질·규제 (QA/RA)",
+      title: "감사 증적 수집 및 준비",
+      desc: "국내외 실사 수검 시 감사관 요구 증적 자료를 전산 시스템에서 자동 검색/인덱싱",
+      workflow: "요구목록 → 증적검색 → 적합성검토 → 갭분석 → 보완 → 제출",
+      pattern: "검색/RAG, 분류·추출",
+      control: "증적 원본 해시 검증, 미제출 항목 경고",
+      autoRate: 0.65,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 5,
+      baseMin: 360,
+      steps: [
+        { no: 1, name: "감사관 질의 목록 및 요구 증적 바인더 구조화", role: "감사 수검관", system: "감사 포털", pattern: "분류·추출", min: 60, auto: 0.85, hitl: false },
+        { no: 2, name: "EDMS, ERP, LIMS 등 시스템 전수 증적 검색", role: "AI 엔진", system: "전사 데이터 통합검색", pattern: "검색/RAG", min: 130, auto: 0.80, hitl: false },
+        { no: 3, name: "증적 무결성(해시값) 확인 및 제출 팩 자동 패키징", role: "시스템", system: "PDF 번들러", pattern: "Agent/Workflow", min: 90, auto: 0.70, hitl: false },
+        { no: 4, name: "수검 총괄 책임자 제출 전 적합성 검토 (HITL)", role: "품질보증실장", system: "전자결재", pattern: "Human Review", min: 80, auto: 0.15, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-17",
+      catId: "sales_mkt",
+      catName: "영업·마케팅·고객",
+      title: "고객 맞춤형 제안서 초안",
+      desc: "고객 RFP 요구사항을 분석하고 자사 솔루션 레퍼런스를 매핑한 제안서 초안 작성",
+      workflow: "요구파악 → 자료검색 → 구조설계 → 초안 → 가격/법무검토 → 제출",
+      pattern: "요약·작성, 검색/RAG",
+      control: "최종 단가 및 법적 확약 영업임원 승인",
+      autoRate: 0.60,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 8,
+      baseMin: 600,
+      steps: [
+        { no: 1, name: "고객 RFP 문서 업로드 및 핵심 요구스펙 추출", role: "제안 PM", system: "CRM / M365", pattern: "분류·추출", min: 90, auto: 0.80, hitl: false },
+        { no: 2, name: "기 수주 제안서 및 기술 브로슈어 유사 조항 검색", role: "AI 엔진", system: "영업 지식저장소", pattern: "검색/RAG", min: 150, auto: 0.75, hitl: false },
+        { no: 3, name: "목차 구성 및 섹션별 제안 내용 초안 작성", role: "LLM", system: "PowerPoint / Word", pattern: "요약·작성", min: 210, auto: 0.65, hitl: false },
+        { no: 4, name: "영업대표 및 기술이사 최종 검토/단가 승인 (HITL)", role: "영업총괄임원", system: "전자결재", pattern: "Human Review", min: 150, auto: 0.15, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-18",
+      catId: "sales_mkt",
+      catName: "영업·마케팅·고객",
+      title: "고객의 소리 (VOC) 심층 분석",
+      desc: "콜센터, 이메일, 웹 피드백의 비정형 텍스트를 감성 분석하고 이탈 위험 고객 식별",
+      workflow: "수집 → 비식별/정제 → 분류 → 추세 → 원인 → 개선우선순위 → 보고",
+      pattern: "분류·추출, 분석·탐지",
+      control: "고객 개인식별정보 자동 비식별화 필수",
+      autoRate: 0.80,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 20,
+      baseMin: 180,
+      steps: [
+        { no: 1, name: "다채널 VOC 데이터 수집 및 주민번호/연락처 마스킹", role: "시스템", system: "CRM / CTI", pattern: "분류·추출", min: 40, auto: 0.95, hitl: false },
+        { no: 2, name: "토픽 모델링 및 불만/만족 감성(Sentiment) 스코어링", role: "AI 모델", system: "NLP 분석 엔진", pattern: "분석·탐지", min: 50, auto: 0.90, hitl: false },
+        { no: 3, name: "제품별 불만 급증 원인 요약 및 개선 과제 도출", role: "LLM", system: "BI 대시보드", pattern: "요약·작성", min: 50, auto: 0.75, hitl: false },
+        { no: 4, name: "고객경험(CX) 부서장 주간 리뷰 및 액션 승인 (HITL)", role: "CX 팀장", system: "M365", pattern: "Human Review", min: 40, auto: 0.20, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-19",
+      catId: "sales_mkt",
+      catName: "영업·마케팅·고객",
+      title: "고객 다채널 지능형 상담 어시스턴트",
+      desc: "고객 문의 실시간 의도 파악, FAQ 및 정책 기반 즉각 답변 가이드 추천",
+      workflow: "접수 → 의도/긴급도 → 지식검색 → 답변 → 품질검토 → 기록",
+      pattern: "검색/RAG, Agent/Workflow",
+      control: "오답 시 즉시 상담원 전환, 응대 로그 전수 기록",
+      autoRate: 0.75,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 1200,
+      baseMin: 15,
+      steps: [
+        { no: 1, name: "고객 채팅/문의 인입 및 의도/긴급도 분류", role: "AI 봇", system: "옴니채널 챗봇", pattern: "분류·추출", min: 2, auto: 0.90, hitl: false },
+        { no: 2, name: "사내 제품 매뉴얼 및 환불 규정 실시간 RAG 검색", role: "AI 엔진", system: "지식베이스", pattern: "검색/RAG", min: 4, auto: 0.85, hitl: false },
+        { no: 3, name: "상담원 보조 답변 추천 또는 자동 회신", role: "Agent", system: "상담원 데스크톱", pattern: "요약·작성", min: 5, auto: 0.75, hitl: false },
+        { no: 4, name: "특이 케이스/클레임 상담원 직접 처리 및 승인 (HITL)", role: "상담원", system: "CRM", pattern: "Human Review", min: 4, auto: 0.30, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-20",
+      catId: "fin_legal",
+      catName: "재무·법무",
+      title: "월마감 재무 분석 및 결산 보조",
+      desc: "계정별 전월/전년 동기 대비 증감 변동을 자동 분석하고 주석 설명 초안 작성",
+      workflow: "원장추출 → 계정검증 → 증감분석 → 이상항목 → 설명초안 → 보고",
+      pattern: "분석·탐지, 요약·작성",
+      control: "원장 수정 권한 차단, 재무팀장 최종 승인",
+      autoRate: 0.65,
+      riskTier: "Tier 2 (보통)",
+      avgVolume: 2,
+      baseMin: 720,
+      steps: [
+        { no: 1, name: "SAP 총계정원장(GL) 및 서브원장 시산표 추출", role: "재무 담당자", system: "SAP ERP", pattern: "분류·추출", min: 90, auto: 0.90, hitl: false },
+        { no: 2, name: "계정 과목별 10% 이상 중요 증감 항목 자동 필터링", role: "AI 모델", system: "재무 분석 솔루션", pattern: "분석·탐지", min: 180, auto: 0.80, hitl: false },
+        { no: 3, name: "경영진 보고용 재무제표 변동 주석 초안 작성", role: "LLM", system: "Excel / PPT", pattern: "요약·작성", min: 270, auto: 0.60, hitl: false },
+        { no: 4, name: "회계팀장 및 CFO 결산 승인 (HITL)", role: "CFO / 회계팀장", system: "ERP 결재선", pattern: "Human Review", min: 180, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-21",
+      catId: "fin_legal",
+      catName: "재무·법무",
+      title: "비용 정산 및 증빙 적격성 검토",
+      desc: "법인카드 및 세금계산서 전표의 부가세 적격성, 규정 한도, 중복 청구 자동 대조",
+      workflow: "증빙추출 → 정책대조 → 예외탐지 → 보완요청 → 승인 → 전표",
+      pattern: "분류·추출, 분석·탐지",
+      control: "부정 청구 룰 검증, 결재권자 승인 결재선",
+      autoRate: 0.80,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 800,
+      baseMin: 12,
+      steps: [
+        { no: 1, name: "신용카드 영수증 OCR 인식 및 홈택스 계산서 대조", role: "AI OCR", system: "경비정산 포털", pattern: "분류·추출", min: 3, auto: 0.95, hitl: false },
+        { no: 2, name: "사내 복리후생/출장비 규정 위배 및 주말/심야 검증", role: "룰 엔진 + AI", system: "ERP 회계모듈", pattern: "분석·탐지", min: 3, auto: 0.85, hitl: false },
+        { no: 3, name: "정상 전표 자동 승인 및 반려 대상 사유 통보", role: "Agent", system: "전자결재", pattern: "Agent/Workflow", min: 3, auto: 0.80, hitl: false },
+        { no: 4, name: "예외 건 재무 담당자 확인 및 최종 전표 기표 (HITL)", role: "재무담당자", system: "SAP", pattern: "Human Review", min: 3, auto: 0.20, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-22",
+      catId: "fin_legal",
+      catName: "재무·법무",
+      title: "계약서 위험 조항 사전 검토",
+      desc: "NDA, 공급계약서, 용역계약서의 독소 조항(배상한도, 지재권 귀속) 자동 식별",
+      workflow: "문서수신 → 조항분류 → 표준비교 → 위험표시 → 수정의견 → 법무승인",
+      pattern: "검색/RAG, 요약·작성",
+      control: "법무팀 변호사/법무담당자 최종 승인 필수",
+      autoRate: 0.50,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 35,
+      baseMin: 240,
+      steps: [
+        { no: 1, name: "계약서 본문 파싱 및 조항(Clause)별 자동 분류", role: "법무 담당자", system: "계약관리(CLM)", pattern: "분류·추출", min: 30, auto: 0.85, hitl: false },
+        { no: 2, name: "사내 표준 계약 조항 및 판례 데이터 대조 검색", role: "AI 법률 엔진", system: "법률 지식베이스", pattern: "검색/RAG", min: 70, auto: 0.70, hitl: false },
+        { no: 3, name: "불리한 독소 조항 하이라이트 및 수정 대안 제안", role: "LLM", system: "Word / CLM", pattern: "요약·작성", min: 80, auto: 0.55, hitl: false },
+        { no: 4, name: "사내 변호사/법무팀장 최종 법률 의견 확정 (HITL)", role: "사내변호사", system: "전자결재", pattern: "Human Review", min: 60, auto: 0.05, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-23",
+      catId: "hr_admin",
+      catName: "인사·총무·경영",
+      title: "신규 입사자 온보딩 AI 가이드",
+      desc: "입사자 직무 맞춤형 안내, 복리후생 Q&A, 사내 시스템 계정 신청 가이드 제공",
+      workflow: "입사정보 → 역할별자료 → 계정/교육 → 안내 → 완료추적 → 문의응대",
+      pattern: "검색/RAG, Agent/Workflow",
+      control: "인사정보 열람 권한 제한, 온보딩 체크리스트",
+      autoRate: 0.75,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 25,
+      baseMin: 120,
+      steps: [
+        { no: 1, name: "입사 예정자 기본 정보 및 배치 부서 연동", role: "인사 담당자", system: "HRIS", pattern: "분류·추출", min: 20, auto: 0.90, hitl: false },
+        { no: 2, name: "직무별 맞춤 온보딩 키트 및 교육 일정 자동 생성", role: "Agent", system: "LMS / 사내 포털", pattern: "Agent/Workflow", min: 40, auto: 0.80, hitl: false },
+        { no: 3, name: "사내 규정 및 복리후생 24시간 실시간 대화형 Q&A", role: "AI 봇", system: "Teams / Slack", pattern: "검색/RAG", min: 40, auto: 0.85, hitl: false },
+        { no: 4, name: "인사 파트장 온보딩 진도율 모니터링 및 완료 승인 (HITL)", role: "HR 파트장", system: "HRIS", pattern: "Human Review", min: 20, auto: 0.20, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-24",
+      catId: "hr_admin",
+      catName: "인사·총무·경영",
+      title: "사내 교육 자료 및 퀴즈 자동 제작",
+      desc: "사내 규정, 직무 매뉴얼을 기반으로 대화형 e-러닝 교안과 평가 퀴즈 자동 생성",
+      workflow: "요구분석 → 자료수집 → 구조설계 → 초안 → 전문가검토 → 배포",
+      pattern: "요약·작성, 검색/RAG",
+      control: "저작권 및 내부 기밀 유출 여부 검증",
+      autoRate: 0.70,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 6,
+      baseMin: 360,
+      steps: [
+        { no: 1, name: "교육 대상 원천 매뉴얼 및 보안 가이드라인 수집", role: "교육 담당자", system: "LMS / 위키", pattern: "검색/RAG", min: 60, auto: 0.80, hitl: false },
+        { no: 2, name: "모듈별 학습 슬라이드 및 스크립트 초안 작성", role: "LLM", system: "PowerPoint / LMS", pattern: "요약·작성", min: 150, auto: 0.75, hitl: false },
+        { no: 3, name: "이해도 평가용 다지선다/단답형 퀴즈 및 정답해설 생성", role: "AI 모델", system: "LMS 평가 모듈", pattern: "Agent/Workflow", min: 90, auto: 0.70, hitl: false },
+        { no: 4, name: "사내 직무 전문가(SME) 내용 검증 및 최종 배포 (HITL)", role: "직무 전문가", system: "LMS", pattern: "Human Review", min: 60, auto: 0.15, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-25",
+      catId: "hr_admin",
+      catName: "인사·총무·경영",
+      title: "경영진 보고 자료 초안 생성",
+      desc: "주요 경영 실적 지표와 사업부 현안을 취합하여 CEO/임원 회의용 슬라이드 초안 작성",
+      workflow: "주제정의 → 데이터수집 → 분석 → 메시지화 → 초안 → 검토 → 배포",
+      pattern: "요약·작성, 분석·탐지",
+      control: "핵심 경영 지표 원천 대조, 보안 배포",
+      autoRate: 0.55,
+      riskTier: "Tier 1 (고위험)",
+      avgVolume: 4,
+      baseMin: 480,
+      steps: [
+        { no: 1, name: "ERP 손익, SCM 실적, 주요 프로젝트 진척도 취합", role: "기획 담당자", system: "경영정보시스템(MIS)", pattern: "분류·추출", min: 90, auto: 0.80, hitl: false },
+        { no: 2, name: "전월 대비 주요 변동 이슈 및 사업 리스크 분석", role: "AI 분석엔진", system: "BI 솔루션", pattern: "분석·탐지", min: 120, auto: 0.70, hitl: false },
+        { no: 3, name: "Executive Summary 및 보고용 슬라이드 초안 구성", role: "LLM", system: "PowerPoint", pattern: "요약·작성", min: 150, auto: 0.60, hitl: false },
+        { no: 4, name: "경영기획실장/전무 최종 팩트체크 및 보고 승인 (HITL)", role: "경영기획실장", system: "대외비 포털", pattern: "Human Review", min: 120, auto: 0.10, hitl: true }
+      ]
+    },
+    {
+      id: "TMPL-26",
+      catId: "hr_admin",
+      catName: "인사·총무·경영",
+      title: "회의 의사결정 추출 및 Action Item 추적",
+      desc: "회의 녹음/텍스트에서 핵심 의사결정 사항과 담당자별 실행 과제를 추출하여 자동 트래킹",
+      workflow: "자료/회의수집 → 결정추출 → Action Item → 담당/기한 → 추적 → 보고",
+      pattern: "요약·작성, Agent/Workflow",
+      control: "음성/기록 기밀 유지, 담당자 배정 통보",
+      autoRate: 0.75,
+      riskTier: "Tier 3 (저위험)",
+      avgVolume: 16,
+      baseMin: 120,
+      steps: [
+        { no: 1, name: "회의 전사(STT) 텍스트 및 회의록 수집", role: "회의 주관자", system: "Teams / 녹음 파일", pattern: "분류·추출", min: 20, auto: 0.90, hitl: false },
+        { no: 2, name: "핵심 의사결정(Decision) 및 Action Item 분리 추출", role: "LLM", system: "M365 Copilot/Agent", pattern: "요약·작성", min: 40, auto: 0.80, hitl: false },
+        { no: 3, name: "Jira/Planner 태스크 자동 생성 및 담당자 알림 발송", role: "시스템", system: "Planner / Jira", pattern: "Agent/Workflow", min: 30, auto: 0.85, hitl: false },
+        { no: 4, name: "회의 주관 부서장 내용 확인 및 일정 확정 (HITL)", role: "부서장", system: "M365", pattern: "Human Review", min: 30, auto: 0.20, hitl: true }
+      ]
+    }
+  ],
+
+  // 10 Preloaded Portfolio Initiatives (PRD 제7장 & 엑셀 모델 연계)
+  initialUseCases: [
+    {
+      id: "UC-2026-001",
+      title: "주간 장애 및 운영 보고 자동화",
+      org: "정보기술·데이터",
+      owner: "김인프라 팀장",
+      stage: "Pilot",
+      gate: "G4 통과",
+      riskTier: "Tier 2 (보통)",
+      scores: { value: 4.5, feasibility: 4.2, alignment: 4.0, reuse: 4.0, risk: 2.0 },
+      priorityScore: 8.5,
+      annualBenefit: 95532,  // 천원
+      annualTco: 27900,      // 천원
+      annualNet: 67632,      // 천원
+      threeYearTco: 50700,   // 천원
+      threeYearRoi: 2.82,    // 282%
+      paybackMonths: 4.2,
+      status: "Approved",
+      templateId: "TMPL-02",
+      desc: "다중 소스 모니터링 로그 및 장애 티켓을 자동 취합하여 주간 경영진 보고서 초안 생성"
+    },
+    {
+      id: "UC-2026-002",
+      title: "계약서 위험 조항 사전 검토",
+      org: "재무·법무",
+      owner: "이법무 수석",
+      stage: "Assessment",
+      gate: "G2 대기",
+      riskTier: "Tier 1 (고위험)",
+      scores: { value: 4.8, feasibility: 3.5, alignment: 4.5, reuse: 3.8, risk: 3.2 },
+      priorityScore: 7.9,
+      annualBenefit: 115000,
+      annualTco: 48000,
+      annualNet: 67000,
+      threeYearTco: 86000,
+      threeYearRoi: 2.12,
+      paybackMonths: 8.6,
+      status: "Reviewing",
+      templateId: "TMPL-22",
+      desc: "공급 계약서 및 NDA 내 독소 조항과 배상 한도 위험을 자동 감지하고 수정안 제시"
+    },
+    {
+      id: "UC-2026-003",
+      title: "고객 다채널 지능형 상담 어시스턴트",
+      org: "영업·마케팅·고객",
+      owner: "박고객 팀장",
+      stage: "PoC",
+      gate: "G3 통과",
+      riskTier: "Tier 2 (보통)",
+      scores: { value: 4.6, feasibility: 4.0, alignment: 4.8, reuse: 4.2, risk: 2.8 },
+      priorityScore: 8.4,
+      annualBenefit: 185000,
+      annualTco: 62000,
+      annualNet: 123000,
+      threeYearTco: 118000,
+      threeYearRoi: 3.70,
+      paybackMonths: 6.1,
+      status: "Approved",
+      templateId: "TMPL-19",
+      desc: "실시간 고객 문의 의도 파악 및 지식베이스 RAG 검색을 통한 상담원 응대 지원"
+    },
+    {
+      id: "UC-2026-004",
+      title: "공급사 견적 비교 및 단가 분석",
+      org: "생산·공급망",
+      owner: "최구매 수석",
+      stage: "Screening",
+      gate: "G1 대기",
+      riskTier: "Tier 3 (저위험)",
+      scores: { value: 3.8, feasibility: 4.2, alignment: 3.5, reuse: 3.0, risk: 1.8 },
+      priorityScore: 7.1,
+      annualBenefit: 72000,
+      annualTco: 28000,
+      annualNet: 44000,
+      threeYearTco: 54000,
+      threeYearRoi: 2.45,
+      paybackMonths: 7.6,
+      status: "Submitted",
+      templateId: "TMPL-13",
+      desc: "복수 공급사 견적서 OCR 추출 및 과거 계약 단가 대조를 통한 최적 협상안 제시"
+    },
+    {
+      id: "UC-2026-005",
+      title: "비용 정산 및 증빙 적격성 검토",
+      org: "재무·법무",
+      owner: "정회계 팀장",
+      stage: "Production",
+      gate: "G5 운영",
+      riskTier: "Tier 3 (저위험)",
+      scores: { value: 4.2, feasibility: 4.6, alignment: 3.8, reuse: 4.0, risk: 1.5 },
+      priorityScore: 8.2,
+      annualBenefit: 94000,
+      annualTco: 32000,
+      annualNet: 62000,
+      threeYearTco: 61000,
+      threeYearRoi: 3.62,
+      paybackMonths: 6.2,
+      status: "In-Ops",
+      templateId: "TMPL-21",
+      desc: "법인카드 전표 및 홈택스 세금계산서의 규정 한도 및 중복 청구 자동 감사"
+    },
+    {
+      id: "UC-2026-006",
+      title: "규제·품질 문서 정합성 점검",
+      org: "품질·규제",
+      owner: "강품질 실장",
+      stage: "Assessment",
+      gate: "G2 대기",
+      riskTier: "Tier 1 (고위험)",
+      scores: { value: 4.7, feasibility: 3.2, alignment: 4.6, reuse: 3.5, risk: 3.5 },
+      priorityScore: 7.5,
+      annualBenefit: 128000,
+      annualTco: 55000,
+      annualNet: 73000,
+      threeYearTco: 102000,
+      threeYearRoi: 2.76,
+      paybackMonths: 9.0,
+      status: "Conditional",
+      templateId: "TMPL-14",
+      desc: "글로벌 규제 당국 제출 기술문서의 요건 누락 및 용어 불일치 선제적 검증"
+    },
+    {
+      id: "UC-2026-007",
+      title: "신규 입사자 온보딩 AI 가이드",
+      org: "인사·총무",
+      owner: "윤인사 파트장",
+      stage: "Optimize",
+      gate: "G6 가치검증",
+      riskTier: "Tier 3 (저위험)",
+      scores: { value: 3.5, feasibility: 4.8, alignment: 3.2, reuse: 3.5, risk: 1.2 },
+      priorityScore: 7.4,
+      annualBenefit: 52000,
+      annualTco: 19000,
+      annualNet: 33000,
+      threeYearTco: 36000,
+      threeYearRoi: 3.33,
+      paybackMonths: 6.9,
+      status: "In-Ops",
+      templateId: "TMPL-23",
+      desc: "입사자 전용 맞춤 온보딩 로드맵 및 사내 규정 24시간 질의응답 봇"
+    },
+    {
+      id: "UC-2026-008",
+      title: "보안 경보(SIEM) 1차 분석 자동화",
+      org: "보안·개인정보",
+      owner: "조보안 팀장",
+      stage: "PoC",
+      gate: "G3 통과",
+      riskTier: "Tier 1 (고위험)",
+      scores: { value: 4.9, feasibility: 3.6, alignment: 4.9, reuse: 4.5, risk: 3.0 },
+      priorityScore: 8.6,
+      annualBenefit: 165000,
+      annualTco: 58000,
+      annualNet: 107000,
+      threeYearTco: 112000,
+      threeYearRoi: 3.42,
+      paybackMonths: 6.5,
+      status: "Approved",
+      templateId: "TMPL-06",
+      desc: "SIEM 오탐 필터링 및 침해 위험도 판정, 침해 대응 리포트 초안 자동화"
+    },
+    {
+      id: "UC-2026-009",
+      title: "연구 논문 및 특허 선행 기술 분석",
+      org: "연구개발",
+      owner: "한연구 수석",
+      stage: "Screening",
+      gate: "G1 대기",
+      riskTier: "Tier 2 (보통)",
+      scores: { value: 4.3, feasibility: 3.8, alignment: 4.4, reuse: 3.6, risk: 2.2 },
+      priorityScore: 7.8,
+      annualBenefit: 88000,
+      annualTco: 35000,
+      annualNet: 53000,
+      threeYearTco: 68000,
+      threeYearRoi: 2.88,
+      paybackMonths: 7.7,
+      status: "Submitted",
+      templateId: "TMPL-09",
+      desc: "글로벌 특허 DB 및 논문 선행 조사 요약과 핵심 경쟁 기술 갭 분석"
+    },
+    {
+      id: "UC-2026-010",
+      title: "회의 의사결정 추출 및 Action 추적",
+      org: "전략·경영",
+      owner: "오전략 팀장",
+      stage: "Pilot",
+      gate: "G4 대기",
+      riskTier: "Tier 3 (저위험)",
+      scores: { value: 3.9, feasibility: 4.4, alignment: 3.7, reuse: 3.8, risk: 1.6 },
+      priorityScore: 7.6,
+      annualBenefit: 64000,
+      annualTco: 24000,
+      annualNet: 40000,
+      threeYearTco: 46000,
+      threeYearRoi: 3.17,
+      paybackMonths: 6.9,
+      status: "Approved",
+      templateId: "TMPL-26",
+      desc: "전사 주요 회의의 의사결정 및 과제 Action Item 자동 분리 및 기한 추적"
+    }
+  ],
+
+  // 8 TCO Cost Breakdown Default for Flagship Case (UC-2026-001)
+  defaultTcoBreakdown: [
+    { group: "1. 발견·설계", name: "프로세스 분석 및 데이터 평가", type: "One-time", initial: 3500, monthly: 0, desc: "실무자 워크숍 및 로그 데이터 전처리" },
+    { group: "1. 발견·설계", name: "AI 아키텍처 및 보안/규제 검토", type: "One-time", initial: 2500, monthly: 0, desc: "보안 거버넌스 및 클라우드 VPC 설계" },
+    { group: "2. 구축·통합", name: "로그 파서 및 이상탐지 Agent 개발", type: "One-time", initial: 8500, monthly: 0, desc: "Zabbix/CloudWatch 연동 및 Agent 개발" },
+    { group: "2. 구축·통합", name: "M365/사내 결재 API 연동 및 테스트", type: "One-time", initial: 4000, monthly: 0, desc: "ITSM 결재선 연동 및 단위/통합 테스트" },
+    { group: "2. 구축·통합", name: "PoC 환경 구축 및 데이터 파이프라인", type: "One-time", initial: 3000, monthly: 0, desc: "PoC 인프라 및 골든 데이터셋 구축" },
+    { group: "3. 플랫폼·사용량", name: "LLM API 호출료 (토큰 과금)", type: "Monthly Run", initial: 0, monthly: 450, desc: "주당 4회 리포트 초안 생성 및 토큰 비용" },
+    { group: "3. 플랫폼·사용량", name: "벡터 DB 및 문서 임베딩 인프라", type: "Monthly Run", initial: 0, monthly: 180, desc: "사내 벡터 인스턴스 호스팅" },
+    { group: "3. 플랫폼·사용량", name: "클라우드 컴퓨팅 및 스토리지", type: "Monthly Run", initial: 0, monthly: 320, desc: "Agent 실행 컨테이너 및 S3 로그 보존" },
+    { group: "4. 운영·유지보수", name: "프롬프트 최적화 및 드리프트 점검", type: "Monthly Run", initial: 0, monthly: 350, desc: "주간 성능 평가 및 프롬프트 지속 튜닝" },
+    { group: "4. 운영·유지보수", name: "장애 대응 및 벤더 SLA 관리", type: "Monthly Run", initial: 0, monthly: 200, desc: "2선 기술 지원 및 패치 관리" },
+    { group: "5. 사람·변화관리", name: "현업 운영자 교육 및 SOP 제작", type: "One-time", initial: 2000, monthly: 0, desc: "SOP 제정 및 실무자 2회 핸즈온 교육" },
+    { group: "5. 사람·변화관리", name: "운영 모니터링 및 변화관리 공수", type: "Monthly Change", initial: 0, monthly: 250, desc: "월 1회 피드백 회고 및 사용자 개선 인터뷰" },
+    { group: "6. 통제·컴플라이언스", name: "보안 점검 및 개인정보영향평가", type: "One-time", initial: 1800, monthly: 0, desc: "사내 정보보호팀 사전 감사 및 승인" },
+    { group: "6. 통제·컴플라이언스", name: "감사 증적 수집 및 환각 검증", type: "Monthly Control", initial: 0, monthly: 150, desc: "분기별 감사 리포트 및 로그 전수 보존" },
+    { group: "7. 공통비 배부", name: "전사 AI 공통 플랫폼 라이선스 배부", type: "Monthly Shared", initial: 0, monthly: 300, desc: "전사 사용량 비례 배부 (5% 비중)" },
+    { group: "8. 종료·전환", name: "데이터 반출, 삭제 및 모델 전환", type: "Exit Cost", initial: 1500, monthly: 0, desc: "서비스 종료 시 아카이빙 비용 (5년차)" }
+  ],
+
+  // 5 Benefit Dimensions Default
+  defaultBenefitDrivers: {
+    hourlyLaborRate: 45.0,        // 45,000 KRW / hour
+    capacityRealizationRate: 0.70, // 70% capacity realization
+    evidenceConfidence: 0.85,      // 85% confidence
+    realizationProbability: 0.90,  // 90% probability
+    discountRate: 0.08             // 8.0% annual WACC
+  },
+
+  defaultDirectBenefits: [
+    { cat: "direct_cost", name: "상용 모니터링 외주 용역비 절감", monthly: 800, desc: "외부 IT 리포팅 계약 축소 절감액" },
+    { cat: "direct_cost", name: "레거시 보고서 툴 좌석 라이선스 감축", monthly: 350, desc: "유휴 BI 리포팅 계정 10좌석 회수" },
+    { cat: "quality", name: "장애 수치 오기입 및 재작업 비용 절감", monthly: 650, desc: "보고서 오류 수정 및 재발행 공수 절감" },
+    { cat: "risk", name: "장애 늑장 보고에 따른 SLA 위약금 회피", monthly: 541, desc: "리스크 감소분 x 신뢰도(85%) x 실현율(90%)" },
+    { cat: "revenue", name: "가동시간 증대에 따른 현업 손실 회피", monthly: 500, desc: "MTTR 15분 단축에 따른 업무 중단 손실 회피" }
+  ],
+
+  // Value Realization KPI Tracking
+  kpiTracking: [
+    { no: 1, kpi: "주간 리포트 작성 총 소요시간", type: "시간/생산성", baseline: 30.0, target: 9.3, actual: 8.5, unit: "시간/월", rev: true, note: "실측 초과 달성: Agent 도입으로 티켓 분류 시간 대폭 단축" },
+    { no: 2, kpi: "엔지니어 1인당 절감 시간", type: "시간/생산성", baseline: 0.0, target: 20.7, actual: 21.5, unit: "시간/월", rev: false, note: "운영자 수용성 우수, 템플릿 표준화 안착" },
+    { no: 3, kpi: "보고서 데이터 오기입 및 재작업률", type: "품질/오류", baseline: 12.0, target: 3.0, actual: 2.1, unit: "%", rev: true, note: "지식 베이스 정합성 향상 및 자동 수치 대조 효과" },
+    { no: 4, kpi: "주간 보고서 경영진 배포 완료 시점", type: "SLA/속도", baseline: 18.0, target: 14.0, actual: 12.5, unit: "시 (금요일)", rev: true, note: "기존 금요일 18시 마감에서 12시 30분 조기 배포 달성" },
+    { no: 5, kpi: "월간 LLM 및 클라우드 실집행비", type: "비용/TCO", baseline: 0.0, target: 950, actual: 880, unit: "천원/월", rev: true, note: "프롬프트 캐싱 및 토큰 압축 기법으로 7% 절감" },
+    { no: 6, kpi: "월간 순 실현 편익 (Net Benefit)", type: "재무/편익", baseline: 0.0, target: 7150, actual: 7420, unit: "천원/월", rev: false, note: "절감 인력의 장애 예방 고부가가치 전환 확인" },
+    { no: 7, kpi: "현업 사용자 만족도 점수 (CSAT)", type: "만족도", baseline: 2.8, target: 4.5, actual: 4.6, unit: "점 (5점)", rev: false, note: "반복적인 로그 취합 스트레스 경감 만족도 매우 높음" },
+    { no: 8, kpi: "AI 보안 및 규제 정책 위반 건수", type: "보안/통제", baseline: 0.0, target: 0.0, actual: 0.0, unit: "건", rev: true, note: "보안 필터 및 개인정보 마스킹 100% 가동 (0건 유지)" }
+  ],
+
+  // Initial Audit Logs (PRD 제13장)
+  auditLogs: [
+    { id: "EVT-9001", time: "2026-09-18 09:15:22", actor: "김인프라 팀장 (user_it_01)", role: "Business Owner", action: "WORKFLOW_CONFIRMED", obj: "UC-2026-001", desc: "주간 장애 보고 6단계 워크플로우 확정 및 ROI Simulator 전달" },
+    { id: "EVT-9002", time: "2026-09-18 10:30:10", actor: "박재무 수석 (user_fin_02)", role: "Finance Reviewer", action: "TCO_BENEFIT_REVIEWED", obj: "UC-2026-001", desc: "TCO 8대 비용군 및 생산성 실현계수 70% 타당성 검토 완료" },
+    { id: "EVT-9003", time: "2026-09-18 11:20:45", actor: "이보안 실장 (user_sec_03)", role: "Risk/Security Officer", action: "GATE_G3_PASSED", obj: "UC-2026-001", desc: "G3 위험·기술 통제 승인 (대외비 마스킹 및 HITL 검토 통제 확인)" },
+    { id: "EVT-9004", time: "2026-09-18 13:00:15", actor: "한PMO 전무 (user_pmo_00)", role: "AX/AI PMO", action: "STAGE_TRANSITION", obj: "UC-2026-001", desc: "PoC 종료 및 G4 통과 승인, 파일럿(Pilot) 단계 진입" }
+  ]
+};

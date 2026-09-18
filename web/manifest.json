@@ -1,0 +1,24 @@
+{
+  "name": "AX Portfolio Manager & AI ROI Simulator",
+  "short_name": "AX ROI Hub",
+  "description": "범용 AI 전환 과제 발굴·평가·투자·실행·성과관리 통합 플랫폼 (PRD v3.0)",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#1E3A8A",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
